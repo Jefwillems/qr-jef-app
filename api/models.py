@@ -25,13 +25,6 @@ class ApiHit(models.Model):
         ordering = ['-hit_date']
 
 
-class Department(models.Model):
-    name = models.CharField(max_length=128, unique=True)
-
-    def __str__(self) -> str:
-        return f'{self.name}'
-
-
 class LinkUrl(models.Model):
     name = models.CharField(max_length=64, blank=True,
                             default='', help_text='Name of the url. Used in buttons and links when a code is scanned.')
@@ -52,7 +45,8 @@ QR_MODE_HELP_TEXT = """
 Sets the mode this code is in.<br/>
 Kiosk Mode: Show buttons to choose a link from<br/>
 Redirect Mode: Instantly redirects to the url with the highest priority.<br/>
-Information Page Mode: Show basic info with links to different urls
+Information Page Mode: Show basic info with links to different urls.<br/>
+Chance based redirect: will redirect to one of the urls, based on priority proportion. 
 """
 
 
@@ -62,10 +56,9 @@ class QRCode(models.Model):
         KIOSK = 'kiosk', _('Kiosk Mode')
         REDIRECT = 'redirect', _('Redirect Mode')
         INFO_PAGE = 'info_page', _('Information Page Mode')
+        CHANCE_REDIRECT = 'chance', _('Chance based redirect')
 
     title = models.CharField(blank=True, default='', max_length=100, unique=True)
-    department = models.ForeignKey(
-        to=Department, on_delete=models.CASCADE, related_name='qrcodes')
 
     uuid = models.UUIDField(
         default=uuid.uuid4,
@@ -87,15 +80,10 @@ class QRCode(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 
-    extra_data = models.JSONField(default=dict, blank=True,
-                                  help_text='Use this to add extra data to the rest-api response for this code.<br/>')
-
     def save(self, *args, **kwargs):
         if not self.short_uuid:
             self.short_uuid = slugify(self.title)
         return super(QRCode, self).save(*args, **kwargs)
 
     def __str__(self) -> str:
-        if self.department is not None:
-            return f'{self.title}, {self.department.name}'
         return f'{self.title}'

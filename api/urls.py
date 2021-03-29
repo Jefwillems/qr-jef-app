@@ -5,26 +5,21 @@ from django.views.generic import TemplateView
 
 from . import views
 from . import viewsets
-from .schema import schema
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework import routers
-from graphene_django.views import GraphQLView
 from rest_framework.schemas import get_schema_view
 
 router = routers.DefaultRouter()
 router.register(r'qrcodes', viewsets.CodeViewSet, basename='api-code')
 router.register(r'apihits', viewsets.ApiHitViewSet, basename='api-apihit')
-router.register(r'departments', viewsets.DepartmentViewSet, basename='api-department')
 router.register(r'urls', viewsets.LinkUrlViewSet, basename='api-url')
 
 urlpatterns = [
     path('code/<slug:short_uuid>/', views.CodeView.as_view(), name='code-detail'),
-    path('code/<slug:short_uuid>/dl', views.download_code, name='code-dl'),
-    # path('code/generate/<int:amount>', views.generate, name='code-generate'),
+    path('code/<slug:short_uuid>/dl/', views.download_code, name='code-dl'),
 ]
 
 urlpatterns += [path('api/', include(router.urls)),
-                # path('api/graphql/', login_required(GraphQLView.as_view(graphiql=True, schema=schema))),
                 path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
                 path('openapi/', get_schema_view(
                     title="Qr code Toolkit API",

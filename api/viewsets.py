@@ -1,8 +1,7 @@
 from rest_framework.viewsets import GenericViewSet
 
-from api.serializers import QRCodeSerializer, ApiHitSerializer, DepartmentSerializer, LinkUrlSerializer
-from api.models import ApiHit, QRCode, Department, LinkUrl
-from api.permissions import IsFromDepartmentOrReadOnly
+from api.serializers import QRCodeSerializer, ApiHitSerializer, LinkUrlSerializer
+from api.models import ApiHit, QRCode, LinkUrl
 from rest_framework import viewsets, mixins
 from rest_framework import permissions
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter, DateTimeFilter, NumberFilter
@@ -11,14 +10,12 @@ from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFi
 class CodeViewSet(viewsets.ModelViewSet):
     serializer_class = QRCodeSerializer
     queryset = QRCode.objects.order_by('-last_updated')
-    permission_classes = [permissions.IsAuthenticated, IsFromDepartmentOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('mode', 'title', 'created', 'last_updated', 'uuid', 'department__name')
+    filterset_fields = ('mode', 'title', 'created', 'last_updated', 'uuid')
 
 
 class ApiHitFilterSet(FilterSet):
-    dept = CharFilter(field_name="code__department__name", lookup_expr='icontains', label='Department name')
-    dept_id = NumberFilter(field_name='code__department__id', lookup_expr='exact', label='Department id')
     action = CharFilter(field_name='action', lookup_expr='icontains')
     hit_date = DateTimeFilter(field_name='hit_date')
     code_id = NumberFilter(field_name='code__id', lookup_expr='exact', label='Code id')
@@ -31,15 +28,6 @@ class ApiHitViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     filter_backends = (DjangoFilterBackend,)
     filter_class = ApiHitFilterSet
-
-
-class DepartmentViewSet(viewsets.ModelViewSet):
-    serializer_class = DepartmentSerializer
-    queryset = Department.objects.all()
-    permission_classes = [permissions.IsAuthenticated, ]
-    pagination_class = None
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name',)
 
 
 class LinkUrlViewSet(mixins.CreateModelMixin,

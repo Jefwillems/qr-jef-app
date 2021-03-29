@@ -8,7 +8,7 @@ import requests
 import io
 import zipfile
 
-from api.models import ApiHit, Department, LinkUrl, QRCode
+from api.models import ApiHit, LinkUrl, QRCode
 
 
 @admin.register(ApiHit)
@@ -16,7 +16,6 @@ class ApiHitAdmin(admin.ModelAdmin):
     readonly_fields = ('hit_date', 'action', 'code', 'message')
     list_display = ('code', 'hit_date', 'action', 'message')
     change_list_template = 'api/apihit/change_list.html'
-    list_filter = ('code__department__name',)
 
     def get_list_display(self, request):
         return super(ApiHitAdmin, self).get_list_display(request)
@@ -29,20 +28,13 @@ class LinkUrlInline(admin.StackedInline):
 
 @admin.register(QRCode)
 class QRCodeAdmin(VersionAdmin):
-    list_display = ('title', 'department',
+    list_display = ('title',
                     'get_code_url', 'get_code_image_url')
-    list_filter = (('department', admin.RelatedOnlyFieldListFilter),)
-    search_fields = ('title', 'department__name')
+    search_fields = ('title',)
     inlines = [LinkUrlInline]
     change_list_template = 'api/qrcode/change_list.html'
     actions = ['download_codes', ]
     readonly_fields = ('uuid',)
-
-    def get_queryset(self, request):
-        qs = super(QRCodeAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(department=request.user.department)
 
     def get_model_perms(self, request):
         return super(QRCodeAdmin, self).get_model_perms(request)
@@ -78,11 +70,6 @@ class QRCodeAdmin(VersionAdmin):
         self.message_user(request, message=message)
         return resp
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'department' and not request.user.is_superuser:
-            kwargs['queryset'] = Department.objects.filter(name__exact=request.user.department.name)
-        return super(QRCodeAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
     def get_urls(self):
         urls = super(QRCodeAdmin, self).get_urls()
         custom_urls = [
@@ -102,11 +89,6 @@ class QRCodeAdmin(VersionAdmin):
         return TemplateResponse(request, 'api/qrcode/scanner.html', context)
 
 
-@admin.register(Department)
-class DepartmentAdmin(admin.ModelAdmin):
-    pass
-
-
-admin.site.site_header = 'Qr Gent Administration'
-admin.site.site_title = 'Qr Gent admin'
+admin.site.site_header = 'Qr Jef Administration'
+admin.site.site_title = 'Qr Jef admin'
 admin.site.site_url = '/api/'
