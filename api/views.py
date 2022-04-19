@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.generics import RetrieveAPIView
 from .models import ApiHit, QRCode, LinkUrl
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.views.generic import DetailView
 import random
@@ -100,7 +100,7 @@ class QRCodeDetails(RetrieveAPIView):
                 url_count = urls.count()
                 avgs = [x.priority / url_count for x in urls]
                 choice = random.choices(urls, avgs, k=1)
-                return HttpResponse(choice[0].name)
+                return HttpResponseRedirect(choice[0].url)
 
             return Response({'qrcode': qrcode}, template_name='api/qrcode/index.html')
 
